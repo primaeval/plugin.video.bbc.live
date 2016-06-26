@@ -74,6 +74,79 @@ def play_media(path):
     xbmc.executebuiltin(cmd)
 
     
+    
+@plugin.route('/device/<channelname>/<device>')
+def device(channelname,device):
+    items = []
+    
+    for cast in ['simulcast', 'webcast']:    
+        if device in ['abr_hdtv', 'hdtv', 'tv', 'hls_tablet']:
+            for provider in ['ak', 'llnw']:
+                url = 'http://a.files.bbci.co.uk/media/live/manifesto/audio_video/%s/hls/uk/%s/%s/%s.m3u8' \
+                      % (cast, device, provider, channelname)
+                r = requests.get(url)
+                html = r.content
+
+                for m in re.finditer(r'#EXT-X-STREAM-INF:PROGRAM-ID=(.+?),BANDWIDTH=(.+?),CODECS="(.*?)",RESOLUTION=(.+?)\s*(.+?.m3u8)',html):
+                    url = m.group(5)
+                    resolution = m.group(4)
+                    bitrate = m.group(2)
+                    label = "%s m3u8 %s %s %s %s %s" % (channelname, device, cast, provider, bitrate, resolution)
+                    items.append({'label':label, 'path':url, 'is_playable':True})
+        
+    for cast in ['simulcast', 'webcast']:
+        ### HDS  #BUG high bitrate streams play at low bitrate
+        if device in ['pc', 'apple-ipad-hls']:
+            for provider in ['ak', 'llnw']:
+                url = 'http://a.files.bbci.co.uk/media/live/manifesto/audio_video/%s/hds/uk/%s/%s/%s.f4m'  % (cast, device, provider, channelname)
+                #print url
+                r = requests.get(url)
+                html = r.text
+                #print html
+                streams = re.compile('<media href="(.+?)" bitrate="(.+?)"/>').findall(html)
+                #if streams:
+                #    print url
+                for stream in streams:
+                    bitrate = stream[1]
+                    #bandwidth = int(int(bitrate) * 1000.0)
+                    url = stream[0]
+                    url = "plugin://plugin.video.f4mTester/?url=%s" % url
+                    label = "%s f4m %s %s %s %s" % (channelname, device, cast, provider, bitrate)
+                    items.append({'label':label, 'path':plugin.url_for("play_media",path=url), 'is_playable':False})
+
+    urls = {}
+    for protocol in ['hls']:
+        if device in ['pc','iptv-all', 'apple-ipad-hls']:
+            manifest_url = "http://open.live.bbc.co.uk/mediaselector/5/select/version/2.0/mediaset/%s/vpid/%s/transferformat/%s?cb=%d" % \
+            (device, channelname, protocol, random.randrange(10000,99999)) 
+            #print manifest_url
+            r = requests.get(manifest_url)
+            html = r.text
+            #print html
+            match = re.compile(
+                'media.+?bitrate="(.+?)".+?encoding="(.+?)".+?connection.+?href="(.+?)".+?supplier="(.+?)".+?transferFormat="(.+?)"'
+                ).findall(html)
+            playlist_urls = set()
+            for bitrate, encoding, url, supplier, transfer_format in match:
+                playlist_urls.add((supplier, url, bitrate))
+            for (supplier, playlist_url, bitrate) in playlist_urls:
+                r = requests.get(playlist_url)
+                html = r.text
+                match = re.compile('#EXT-X-STREAM-INF:PROGRAM-ID=(.+?),BANDWIDTH=(.+?),CODECS="(.*?)",RESOLUTION=(.+?)\s*(.+?.m3u8)').findall(html)
+                if match:
+                    print playlist_url
+                for id, bandwidth, codecs, resolution, url in match:
+                    urls[url] = (channelname, device, cast, supplier, bandwidth, resolution)
+
+    for url in sorted(urls):
+        #xbmc.log(url)
+        (channelname, device, cast, supplier, bandwidth, resolution) = urls[url]
+        label = "%s m3u8 %s %s %s %s" % (channelname, device, supplier, bandwidth, resolution)
+        items.append({'label':label, 'path':plugin.url_for("play_media",path=url), 'is_playable':False})
+                
+    return items
+    
+    
 @plugin.route('/channel/<channelname>')
 def channel(channelname):
     items = []
@@ -148,7 +221,7 @@ def channel(channelname):
 @plugin.route('/channels')
 def channels():
     items = []
-    for channel in [
+    for channelname in [
         'bbc_one_hd',
         'bbc_two_hd',
         'bbc_four_hd',
@@ -191,11 +264,30 @@ def channels():
         'sport_stream_24',
         ]:
         items.append({
-            'label': channel,
-            'path': plugin.url_for('channel', channelname=channel),
+            'label': "%s" % channelname,
+            'path': plugin.url_for('devices', channelname=channelname),
+
+        })
+
+    return items
+    
+    
+@plugin.route('/devices/<channelname>')
+def devices(channelname):
+    items = []
+    items.append({
+        'label': "%s ALL" % channelname,
+        'path': plugin.url_for('channel', channelname=channelname),
+
+    })
+    for device in sorted(['abr_hdtv', 'hdtv', 'tv', 'hls_tablet', 'pc', 'apple-ipad-hls''pc','iptv-all', 'apple-ipad-hls']):
+        items.append({
+            'label': "%s %s" % (channelname,device),
+            'path': plugin.url_for('device', channelname=channelname, device=device),
 
         })
     return items
+    
     
 @plugin.route('/')
 def index():
