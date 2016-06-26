@@ -8,13 +8,13 @@ import random
 
 from datetime import datetime,timedelta
 import time
-import urllib
-import HTMLParser
+#import urllib
+#import HTMLParser
 import xbmcplugin
-import xml.etree.ElementTree as ET
-import sqlite3
+#import xml.etree.ElementTree as ET
+#import sqlite3
 import os
-import shutil
+#import shutil
 #from rpc import RPC
 from types import *
 
