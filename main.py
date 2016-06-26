@@ -78,32 +78,20 @@ def play_media(path):
 def channel(channelname):
     items = []
     
-    if channelname in ['bbc_parliament', 'bbc_alba', 's4cpbs', 'bbc_one_london',
-                       'bbc_two_wales_digital', 'bbc_two_northern_ireland_digital', 'bbc_two_scotland']:
-        device = 'hls_tablet'
-    else:
-        device = 'abr_hdtv'
+    for cast in ['simulcast', 'webcast']:    
+        for device in ['abr_hdtv', 'hdtv', 'tv', 'hls_tablet']:
+            for provider in ['ak', 'llnw']:
+                url = 'http://a.files.bbci.co.uk/media/live/manifesto/audio_video/%s/hls/uk/%s/%s/%s.m3u8' \
+                      % (cast, device, provider, channelname)
+                r = requests.get(url)
+                html = r.content
 
-    if channelname.startswith('sport_stream_'):
-        cast = "webcast"
-    else:
-        cast = "simulcast"
-    providers = [('ak', 'Akamai'), ('llnw', 'Limelight')]
-    streams = []
-    
-    for device in ['abr_hdtv', 'hdtv', 'tv', 'hls_tablet']:
-        for provider in ['ak', 'llnw']:
-            url = 'http://a.files.bbci.co.uk/media/live/manifesto/audio_video/%s/hls/uk/%s/%s/%s.m3u8' \
-                  % (cast, device, provider, channelname)
-            r = requests.get(url)
-            html = r.content
-
-            for m in re.finditer(r'#EXT-X-STREAM-INF:PROGRAM-ID=(.+?),BANDWIDTH=(.+?),CODECS="(.*?)",RESOLUTION=(.+?)\s*(.+?.m3u8)',html):
-                url = m.group(5)
-                resolution = m.group(4)
-                bitrate = m.group(2)
-                label = "%s m3u8 %s %s %s %s %s" % (channelname, device, cast, provider, bitrate, resolution)
-                items.append({'label':label, 'path':url, 'is_playable':True})
+                for m in re.finditer(r'#EXT-X-STREAM-INF:PROGRAM-ID=(.+?),BANDWIDTH=(.+?),CODECS="(.*?)",RESOLUTION=(.+?)\s*(.+?.m3u8)',html):
+                    url = m.group(5)
+                    resolution = m.group(4)
+                    bitrate = m.group(2)
+                    label = "%s m3u8 %s %s %s %s %s" % (channelname, device, cast, provider, bitrate, resolution)
+                    items.append({'label':label, 'path':url, 'is_playable':True})
         
     for cast in ['simulcast', 'webcast']:
         ### HDS  #BUG high bitrate streams play at low bitrate
@@ -115,8 +103,8 @@ def channel(channelname):
                 html = r.text
                 #print html
                 streams = re.compile('<media href="(.+?)" bitrate="(.+?)"/>').findall(html)
-                if streams:
-                    print url
+                #if streams:
+                #    print url
                 for stream in streams:
                     bitrate = stream[1]
                     #bandwidth = int(int(bitrate) * 1000.0)
@@ -150,8 +138,9 @@ def channel(channelname):
                     urls[url] = (channelname, device, cast, supplier, bandwidth, resolution)
 
     for url in sorted(urls):
+        #xbmc.log(url)
         (channelname, device, cast, supplier, bandwidth, resolution) = urls[url]
-        label = "%s other %s %s %s %s" % (channelname, device, supplier, bandwidth, resolution)
+        label = "%s m3u8 %s %s %s %s" % (channelname, device, supplier, bandwidth, resolution)
         items.append({'label':label, 'path':plugin.url_for("play_media",path=url), 'is_playable':False})
                 
     return items
