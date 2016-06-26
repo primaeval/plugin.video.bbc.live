@@ -142,7 +142,7 @@ def device(channelname,device):
         #xbmc.log(url)
         (channelname, device, cast, supplier, bandwidth, resolution) = urls[url]
         label = "%s m3u8 %s %s %s %s" % (channelname, device, supplier, bandwidth, resolution)
-        items.append({'label':label, 'path':plugin.url_for("play_media",path=url), 'is_playable':False})
+        items.append({'label':label, 'path':url, 'is_playable':True})
                 
     return items
     
