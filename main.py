@@ -49,8 +49,8 @@ def get_tvdb_id(name):
     if tvdb_match:
         tvdb_id = tvdb_match.group(1)
     return tvdb_id
-    
-    
+
+
 class FileWrapper(object):
     def __init__(self, filename):
         self.vfsfile = xbmcvfs.File(filename)
@@ -67,19 +67,19 @@ class FileWrapper(object):
     def tell(self):
         return self.bytesRead
 
-        
+
 @plugin.route('/play_media/<path>/')
 def play_media(path):
     cmd = "PlayMedia(%s)" % path
     xbmc.executebuiltin(cmd)
 
-    
-    
+
+
 @plugin.route('/device/<channelname>/<device>')
 def device(channelname,device):
     items = []
-    
-    for cast in ['simulcast', 'webcast']:    
+
+    for cast in ['simulcast', 'webcast']:
         if device in ['abr_hdtv', 'hdtv', 'tv', 'hls_tablet']:
             for provider in ['ak', 'llnw']:
                 url = 'http://a.files.bbci.co.uk/media/live/manifesto/audio_video/%s/hls/uk/%s/%s/%s.m3u8' \
@@ -93,7 +93,7 @@ def device(channelname,device):
                     bitrate = m.group(2)
                     label = "%s m3u8 %s %s %s %s %s" % (channelname, device, cast, provider, bitrate, resolution)
                     items.append({'label':label, 'path':url, 'is_playable':True})
-        
+
     for cast in ['simulcast', 'webcast']:
         ### HDS  #BUG high bitrate streams play at low bitrate
         if device in ['pc', 'apple-ipad-hls']:
@@ -118,7 +118,7 @@ def device(channelname,device):
     for protocol in ['hls']:
         if device in ['pc','iptv-all', 'apple-ipad-hls']:
             manifest_url = "http://open.live.bbc.co.uk/mediaselector/5/select/version/2.0/mediaset/%s/vpid/%s/transferformat/%s?cb=%d" % \
-            (device, channelname, protocol, random.randrange(10000,99999)) 
+            (device, channelname, protocol, random.randrange(10000,99999))
             #print manifest_url
             r = requests.get(manifest_url)
             html = r.text
@@ -143,15 +143,15 @@ def device(channelname,device):
         (channelname, device, cast, supplier, bandwidth, resolution) = urls[url]
         label = "%s m3u8 %s %s %s %s" % (channelname, device, supplier, bandwidth, resolution)
         items.append({'label':label, 'path':url, 'is_playable':True})
-                
+
     return items
-    
-    
+
+
 @plugin.route('/channel/<channelname>')
 def channel(channelname):
     items = []
-    
-    for cast in ['simulcast', 'webcast']:    
+
+    for cast in ['simulcast', 'webcast']:
         for device in ['abr_hdtv', 'hdtv', 'tv', 'hls_tablet']:
             for provider in ['ak', 'llnw']:
                 url = 'http://a.files.bbci.co.uk/media/live/manifesto/audio_video/%s/hls/uk/%s/%s/%s.m3u8' \
@@ -165,7 +165,7 @@ def channel(channelname):
                     bitrate = m.group(2)
                     label = "%s m3u8 %s %s %s %s %s" % (channelname, device, cast, provider, bitrate, resolution)
                     items.append({'label':label, 'path':url, 'is_playable':True})
-        
+
     for cast in ['simulcast', 'webcast']:
         ### HDS  #BUG high bitrate streams play at low bitrate
         for device in ['pc', 'apple-ipad-hls']:
@@ -190,7 +190,7 @@ def channel(channelname):
     for protocol in ['hls']:
         for device in ['pc','iptv-all', 'apple-ipad-hls']:
             manifest_url = "http://open.live.bbc.co.uk/mediaselector/5/select/version/2.0/mediaset/%s/vpid/%s/transferformat/%s?cb=%d" % \
-            (device, channelname, protocol, random.randrange(10000,99999)) 
+            (device, channelname, protocol, random.randrange(10000,99999))
             #print manifest_url
             r = requests.get(manifest_url)
             html = r.text
@@ -215,7 +215,7 @@ def channel(channelname):
         (channelname, device, cast, supplier, bandwidth, resolution) = urls[url]
         label = "%s m3u8 %s %s %s %s" % (channelname, device, supplier, bandwidth, resolution)
         items.append({'label':label, 'path':url, 'is_playable':True})
-                
+
     return items
 
 @plugin.route('/channels')
@@ -235,9 +235,23 @@ def channels():
         'bbc_one_scotland_hd',
         'bbc_one_northern_ireland_hd',
         'bbc_one_wales_hd',
+        'bbc_two_england',
         'bbc_two_scotland',
         'bbc_two_northern_ireland_digital',
         'bbc_two_wales_digital',
+        'bbc_one_cambridge',
+        'bbc_one_channel_islands',
+        'bbc_one_east',
+        'bbc_one_east_midlands',
+        'bbc_one_east_yorkshire',
+        'bbc_one_north_east',
+        'bbc_one_north_west',
+        'bbc_one_oxford',
+        'bbc_one_south',
+        'bbc_one_south_east',
+        'bbc_one_west',
+        'bbc_one_west_midlands',
+        'bbc_one_yorks',
         'sport_stream_01',
         'sport_stream_02',
         'sport_stream_03',
@@ -262,6 +276,10 @@ def channels():
         'sport_stream_22',
         'sport_stream_23',
         'sport_stream_24',
+        'scotland_stream_01',
+        'scotland_stream_02',
+        'scotland_stream_03',
+        'scotland_stream_04',
         ]:
         items.append({
             'label': "%s" % channelname,
@@ -270,8 +288,8 @@ def channels():
         })
 
     return items
-    
-    
+
+
 @plugin.route('/devices/<channelname>')
 def devices(channelname):
     items = []
@@ -287,8 +305,8 @@ def devices(channelname):
 
         })
     return items
-    
-    
+
+
 @plugin.route('/')
 def index():
     items = [
