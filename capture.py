@@ -31,7 +31,7 @@ f.write('''<style>
         }
 </style>''')
 
-for s in ['','a','b']:
+for s in ['','b']:
     for i in range(1,25):
         channelname = "sport_stream_%02d%s" % (i,s)
         caption = "Red Button %02d%s" % (i,s)
