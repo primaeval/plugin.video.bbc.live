@@ -31,7 +31,7 @@ f.write('''<style>
         }
 </style>''')
 
-for s in ['','b']:
+for s in ['','a','b']:
     for i in range(1,25):
         channelname = "sport_stream_%02d%s" % (i,s)
         caption = "Red Button %02d%s" % (i,s)
@@ -43,7 +43,8 @@ for s in ['','b']:
             url = m.group(5)
             resolution = m.group(4)
             bitrate = m.group(2)
-            call(["ffmpeg", "-y", "-i", url, "-vframes", "1", "%s.png" % (channelname)])
+            print caption
+            call(["ffmpeg", "-loglevel","quiet","-y", "-i", url, "-vframes", "1", "%s.png" % (channelname)])
             f.write('''<div class="img-wrap">
                         <img src="%s.png" alt= "">
                         <span class="caption">%s</span>
