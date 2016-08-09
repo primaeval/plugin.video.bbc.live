@@ -35,6 +35,7 @@ for s in ['','b']:
     for i in range(1,25):
         channelname = "sport_stream_%02d%s" % (i,s)
         caption = "Red Button %02d%s" % (i,s)
+        print caption
         url = 'http://a.files.bbci.co.uk/media/live/manifesto/audio_video/%s/hls/uk/%s/%s/%s.m3u8' \
           % ('webcast', 'abr_hdtv', 'ak', channelname)
         r = requests.get(url)

@@ -211,7 +211,6 @@ def channel(channelname):
                     urls[url] = (channelname, device, cast, supplier, bandwidth, resolution)
 
     for url in sorted(urls):
-        #xbmc.log(url)
         (channelname, device, cast, supplier, bandwidth, resolution) = urls[url]
         label = "%s m3u8 %s %s %s %s" % (channelname, device, supplier, bandwidth, resolution)
         items.append({'label':label, 'path':url, 'is_playable':True})
@@ -276,6 +275,30 @@ def channels():
         'sport_stream_22',
         'sport_stream_23',
         'sport_stream_24',
+        'sport_stream_01b',
+        'sport_stream_02b',
+        'sport_stream_03b',
+        'sport_stream_04b',
+        'sport_stream_05b',
+        'sport_stream_06b',
+        'sport_stream_07b',
+        'sport_stream_08b',
+        'sport_stream_09b',
+        'sport_stream_10b',
+        'sport_stream_11b',
+        'sport_stream_12b',
+        'sport_stream_13b',
+        'sport_stream_14b',
+        'sport_stream_15b',
+        'sport_stream_16b',
+        'sport_stream_17b',
+        'sport_stream_18b',
+        'sport_stream_19b',
+        'sport_stream_20b',
+        'sport_stream_21b',
+        'sport_stream_22b',
+        'sport_stream_23b',
+        'sport_stream_24b',
         'scotland_stream_01',
         'scotland_stream_02',
         'scotland_stream_03',
@@ -301,11 +324,43 @@ def devices(channelname):
     for device in sorted(['abr_hdtv', 'hdtv', 'tv', 'hls_tablet', 'pc', 'apple-ipad-hls''pc','iptv-all', 'apple-ipad-hls']):
         items.append({
             'label': "%s %s" % (channelname,device),
-            'path': plugin.url_for('device', channelname=channelname, device=device),
+            'path': plugin.url_for('device', channelname=channelname, device='pc'),
 
         })
     return items
 
+@plugin.route('/play/<id>')
+def play(id):
+    headers={"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"}
+
+    url = "http://www.bbc.co.uk/iplayer/episode/%s" % id
+    r = requests.get(url, headers=headers)
+    html = r.content        
+    vpid = re.compile('"vpid":"(.+?)"').findall(html)
+    vpid = vpid[0]
+    url = "http://ess.api.bbci.co.uk/schedules?versionId=%s" % vpid
+    r = requests.get(url, headers=headers)
+    html = r.content        
+    match = re.search('"(sport_stream_.*?)"',html)
+    channelname = match.group(1)
+
+    return device(channelname,'abr_hdtv')
+    
+@plugin.route('/olympics')
+def olympics():
+    headers={"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"}
+    url = "http://www.bbc.co.uk/iplayer/group/p04375l6"
+    r = requests.get(url,headers=headers)
+    html = r.content
+    match = re.findall('href="/iplayer/episode/(p.*?)/.*?".*?title="(.*?)"',html,flags=(re.DOTALL | re.MULTILINE))
+    items = []
+    for (id,title) in match:
+        items.append(    {
+            'label': title,
+            'path': plugin.url_for('play',id=id),
+            'thumbnail':get_icon_path('tv'),
+        })
+    return items
 
 @plugin.route('/')
 def index():
@@ -313,6 +368,12 @@ def index():
     {
         'label': 'Channels',
         'path': plugin.url_for('channels'),
+        'thumbnail':get_icon_path('tv'),
+    },
+
+    {
+        'label': 'Olympics',
+        'path': plugin.url_for('olympics'),
         'thumbnail':get_icon_path('tv'),
     },
     ]
