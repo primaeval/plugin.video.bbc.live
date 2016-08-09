@@ -222,6 +222,7 @@ def channel(channelname):
 def channels():
     items = []
     for channelname in [
+        'p04259gv',
         'bbc_one_hd',
         'bbc_two_hd',
         'bbc_four_hd',
@@ -306,6 +307,34 @@ def devices(channelname):
         })
     return items
 
+@plugin.route('/olympics')
+def olympics():
+    headers={"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"}
+    url = "http://www.bbc.co.uk/iplayer/group/p04375l6"
+    r = requests.get(url,headers=headers)
+    html = r.content
+    #xbmc.log(repr(html))
+    match = re.findall('href="/iplayer/episode/(p.*?)/.*?".*?title="(.*?)"',html,flags=(re.DOTALL | re.MULTILINE))
+    #xbmc.log(repr(match))
+    for (id,title) in match:
+        
+        url = "http://www.bbc.co.uk/iplayer/episode/%s" % id
+        #xbmc.log(repr(url))
+        r = requests.get(url, headers=headers)
+        html = r.content        
+        #xbmc.log(repr(html))
+        vpid = re.compile('"vpid":"(.+?)"').findall(html)
+        vpid = vpid[0]
+        url = "http://ess.api.bbci.co.uk/schedules?versionId=%s" % vpid
+        r = requests.get(url, headers=headers)
+        html = r.content        
+        #xbmc.log(repr(html))        
+        match = re.search('"(sport_stream_.*?)"',html)
+        channel = match.group(1)
+        #xbmc.log(channel)
+        xbmc.log(repr((title,id,channel)))
+        #break
+        
 
 @plugin.route('/')
 def index():
@@ -313,6 +342,12 @@ def index():
     {
         'label': 'Channels',
         'path': plugin.url_for('channels'),
+        'thumbnail':get_icon_path('tv'),
+    },
+
+    {
+        'label': 'Olympics',
+        'path': plugin.url_for('olympics'),
         'thumbnail':get_icon_path('tv'),
     },
     ]
