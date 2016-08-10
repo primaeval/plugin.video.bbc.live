@@ -344,7 +344,12 @@ def play(id):
     match = re.search('"(sport_stream_.*?)"',html)
     channelname = match.group(1)
 
-    return device(channelname,'abr_hdtv')
+    items = device(channelname,'abr_hdtv')
+    bitrate = plugin.get_setting('olympics')
+    if bitrate == "0":
+        return items
+    else:
+        return [items[int(bitrate)-1]]
     
 @plugin.route('/olympics')
 def olympics():
@@ -361,6 +366,7 @@ def olympics():
             'thumbnail':get_icon_path('tv'),
         })
     return items
+
 
 @plugin.route('/')
 def index():
