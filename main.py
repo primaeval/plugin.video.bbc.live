@@ -9,7 +9,7 @@ import random
 from datetime import datetime,timedelta
 import time
 #import urllib
-#import HTMLParser
+import HTMLParser
 import xbmcplugin
 #import xml.etree.ElementTree as ET
 #import sqlite3
@@ -349,7 +349,9 @@ def play(id):
     if bitrate == "0":
         return items
     else:
-        return [items[int(bitrate)-1]]
+        url = items[int(bitrate)-1]['path']
+        play_media(url)
+        #return [items[int(bitrate)-1]]
     
 @plugin.route('/olympics')
 def olympics():
@@ -361,7 +363,7 @@ def olympics():
     items = []
     for (id,title) in match:
         items.append(    {
-            'label': title,
+            'label': HTMLParser.HTMLParser().unescape(title.decode('utf-8')),
             'path': plugin.url_for('play',id=id),
             'thumbnail':get_icon_path('tv'),
         })
